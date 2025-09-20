@@ -209,6 +209,35 @@
                 font-size: 2rem;
             }
         }
+        
+        .material-items {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(20, 30, 40, 0.8);
+            border-radius: 5px;
+            border: 1px solid #3a6ea5;
+        }
+        
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .material-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .material-item input {
+            width: 80px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #3a6ea5;
+            background: rgba(10, 20, 30, 0.8);
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -235,8 +264,19 @@
                         </div>
                         <div class="checkbox-item">
                             <input type="radio" id="type2" name="type" value="纯币+物资">
-                            <label for="type2">纯币+物资</label>
+                            <label for="type2">纯币+物资（结单后计算）</label>
                         </div>
+                    </div>
+                </div>
+                
+                <div id="materialSection" class="material-items">
+                    <div class="material-item">
+                        <label for="sixSet">六套数量（8元/套）</label>
+                        <input type="number" id="sixSet" min="0" value="0">
+                    </div>
+                    <div class="material-item">
+                        <label for="awAmmo">AW子弹数量（2元/发）</label>
+                        <input type="number" id="awAmmo" min="0" value="0">
                     </div>
                 </div>
                 
@@ -259,14 +299,15 @@
             <div id="orderContent">
                 <!-- 订单内容将由JavaScript生成 -->
             </div>
-            <div class="qr-code">
-                <img src="kefu/kefuma.jpg" alt="客服二维码" style="width: 100%; height: 100%; object-fit: contain;">
-            </div>
+             <div class="qr-container">
+            <!-- 替换为您的二维码URL -->
+            <img src="https://niangao776.github.io/kefu/kefuma.jpg" alt="企业微信客服二维码" class="qr-code">
+        </div>
             <p>添加客服后发送此截图完成租号流程</p>
         </div>
         
         <footer>
-            <p>© 2023 三角洲行动租号服务 | 专业游戏账号租赁平台</p>
+            <p>© 2025 三角洲行动租号服务 | 专业游戏账号租赁平台</p>
         </footer>
     </div>
     
@@ -277,12 +318,13 @@
                 <span class="close" id="closeModal">&times;</span>
             </div>
             <div class="modal-body">
-                <p>目前三角洲行动租号比例为40元1000w，2000w起租。</p>
-                <p>租号总额不足5000w免押金，5000w押金200，每多1000w加押金40元。</p>
+                <p>目前三角洲行动租号比例为纯币40元1000w，2000w起租。</p>
+                <p>如需使用仓库物资请额外付费：</p>
+                <p>六套：8元/套</p>
+                <p>AW子弹：2元/发</p>  
+                <p>租号总额不足3000w免押金，3000w押金120元，每1000w押金40元。</p>
                 <p>租号没有时间限制，打完即止，如需续租请联系客服。</p>
-                <p>【注】续租请提前30分钟告知，续租价格为：</p>
-                <p>纯币40 1000w</p>
-                <p>仓库物资50 1000w</p>
+                <p>续租请提前30分钟告知，总计超过3000w需收取押金</p>
                 <p>如未提前告知续租，并使用了额外哈夫币或物资，需根据续租价格1.5倍补交租金。</p>
                 <p>如租号过程中导致账号封号，追缴，限制等处罚，将根据处罚情况扣除押金(如有)并进行追诉补偿。</p>
                 <p>租号请先付租金+押金(如有)，押金在订单结束后退还。</p>
@@ -310,12 +352,22 @@
             }
         });
         
+        // 显示/隐藏物资输入区域
+        document.querySelectorAll('input[name="type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const materialSection = document.getElementById('materialSection');
+                materialSection.style.display = this.value === '纯币+物资' ? 'block' : 'none';
+            });
+        });
+        
         // 生成订单
         document.getElementById('generateBtn').addEventListener('click', function() {
             const amount = document.getElementById('amount').value;
             const type = document.querySelector('input[name="type"]:checked').value;
             const contact = document.getElementById('contact').value;
             const requirements = document.getElementById('requirements').value;
+            const sixSet = document.getElementById('sixSet').value || 0;
+            const awAmmo = document.getElementById('awAmmo').value || 0;
             
             if (!amount || amount < 2000) {
                 alert('租号金额不能低于2000w');
@@ -327,14 +379,25 @@
                 return;
             }
             
-            // 计算租金和押金
-            const rentPer1000w = type === '纯币' ? 40 : 50;
+            // 计算租金和押金（根据公告内容）
+            const rentPer1000w = 40; // 纯币40元/1000w
             const rent = (amount / 1000) * rentPer1000w;
             
-            let deposit = 0;
-            if (amount >= 5000) {
-                deposit = 200 + Math.floor((amount - 5000) / 1000) * 40;
+            // 计算物资费用
+            let materialCost = 0;
+            if (type === '纯币+物资') {
+                materialCost = (sixSet * 8) + (awAmmo * 2);
             }
+            
+            // 计算押金（根据公告内容）
+            let deposit = 0;
+            if (amount >= 3000) {
+                // 3000w押金120元，每1000w押金40元
+                deposit = 120 + Math.floor((amount - 3000) / 1000) * 40;
+            }
+            
+            // 计算总租金（币租金 + 物资费用）
+            const totalRent = rent + materialCost;
             
             // 生成订单内容
             const orderContent = document.getElementById('orderContent');
@@ -343,11 +406,14 @@
                     <h2 style="color: #ff9900; text-align: center; margin-bottom: 20px;">三角洲行动租号订单</h2>
                     <p><strong>租号金额：</strong>${amount}w 哈夫币</p>
                     <p><strong>租号类型：</strong>${type}</p>
+                    ${type === '纯币+物资' ? `<p><strong>六套数量：</strong>${sixSet}套</p>` : ''}
+                    ${type === '纯币+物资' ? `<p><strong>AW子弹数量：</strong>${awAmmo}发</p>` : ''}
                     <p><strong>联系方式：</strong>${contact}</p>
                     <p><strong>特殊要求：</strong>${requirements || '无'}</p>
-                    <p><strong>租金：</strong>${rent}元</p>
+                    <p><strong>币租金：</strong>${rent}元 (${rentPer1000w}元/1000w)</p>
+                    ${type === '纯币+物资' ? `<p><strong>物资费用：</strong>${materialCost}元</p>` : ''}
                     <p><strong>押金：</strong>${deposit}元</p>
-                    <p><strong>总计：</strong>${rent + deposit}元</p>
+                    <p><strong>总计：</strong>${totalRent + deposit}元</p>
                     <p style="margin-top: 20px; color: #ff9900; font-weight: bold;">请添加客服并发送此截图完成租号流程</p>
                     <p style="font-size: 12px; color: #aaa; margin-top: 20px;">订单生成时间：${new Date().toLocaleString()}</p>
                 </div>
